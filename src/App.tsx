@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import { useEffect, useState } from 'react';
 
 const numberOfColumns = 4;
-const mixComplexity = 1000;
+const mixComplexity = 50;
 
 const GridParent = styled.div`
   display: grid;
@@ -28,85 +28,106 @@ const switchValues = (array: number[], indexValue1: number, indexValue2: number)
   return newArray;
 };
 
+const slideLeft = (array: number[], row: number) => {
+  let newArray: number[] = [...array];
+  const index = numberOfColumns * row;
+  newArray = moveValue(array, index, index + numberOfColumns - 1);
+  return newArray;
+};
+
+const slideRight = (array: number[], row: number) => {
+  let newArray: number[] = [...array];
+  const index = numberOfColumns * row;
+  newArray = moveValue(array, index + numberOfColumns - 1, index);
+  return newArray;
+};
+
+const slideUp = (array: number[], column: number) => {
+  let newArray: number[] = [...array];
+
+  for (let i = 0; i < numberOfColumns - 1; i++) {
+    newArray = switchValues(newArray, column + numberOfColumns * i, column + numberOfColumns * (i + 1));
+  }
+
+  return newArray;
+};
+
+const slideDown = (array: number[], column: number) => {
+  let newArray: number[] = [...array];
+
+  for (let i = numberOfColumns - 2; i >= 0; i--) {
+    newArray = switchValues(newArray, column + numberOfColumns * (i + 1), column + numberOfColumns * i);
+  }
+
+  return newArray;
+};
+
 const getRandomNUmber = (min: number, max: number) => {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min) + min);
 };
 
+const mixArray = (array: number[]) => {
+  let newArray: number[] = [...array];
+
+  for (let i = 0; i < mixComplexity - 1; i++) {
+    const randomRowOrColumn = getRandomNUmber(0, numberOfColumns);
+    const direction = getRandomNUmber(0, 4);
+
+    switch (direction) {
+      case 0:
+        newArray = slideLeft(newArray, randomRowOrColumn);
+        break;
+      case 1:
+        newArray = slideRight(newArray, randomRowOrColumn);
+        break;
+      case 2:
+        newArray = slideUp(newArray, randomRowOrColumn);
+        break;
+      case 3:
+        newArray = slideDown(newArray, randomRowOrColumn);
+        break;
+    }
+  }
+
+  return newArray;
+};
+
 function App() {
   const [array, setArray] = useState<number[]>(Array.from(Array(numberOfColumns * numberOfColumns).keys()));
 
-  const slideLeft = (row: number) => {
-    const indexBase = numberOfColumns * row;
-    setArray(moveValue(array, indexBase, indexBase + numberOfColumns - 1));
-  };
+  const onClickSlideLeft = (row: number) => setArray(slideLeft(array, row));
 
-  const slideRight = (row: number) => {
-    const indexBase = numberOfColumns * row;
-    setArray(moveValue(array, indexBase + numberOfColumns - 1, indexBase));
-  };
+  const onClickSlideRight = (row: number) => setArray(slideRight(array, row));
 
-  const slideUp = (column: number) => {
-    let newArray: number[] = [...array];
+  const onClickSlideUp = (column: number) => setArray(slideUp(array, column));
 
-    for (let i = 0; i < numberOfColumns - 1; i++) {
-      newArray = switchValues(newArray, column + numberOfColumns * i, column + numberOfColumns * (i + 1));
-    }
+  const onClickSlideDown = (column: number) => setArray(slideDown(array, column));
 
-    setArray(newArray);
-  };
-
-  const slideDown = (column: number) => {
-    let newArray: number[] = [...array];
-
-    for (let i = numberOfColumns - 2; i >= 0; i--) {
-      newArray = switchValues(newArray, column + numberOfColumns * (i + 1), column + numberOfColumns * i);
-    }
-
-    setArray(newArray);
-  };
-
-  const mixArray = () => {
-    for (let i = 0; i < mixComplexity - 1; i++) {
-      const randomRowOrColumn = getRandomNUmber(0, numberOfColumns);
-      const direction = getRandomNUmber(0, 4);
-
-      switch (direction) {
-        case 0:
-          slideLeft(randomRowOrColumn);
-          break;
-        case 1:
-          slideRight(randomRowOrColumn);
-          break;
-        case 2:
-          slideUp(randomRowOrColumn);
-          break;
-        case 3:
-          slideDown(randomRowOrColumn);
-          break;
-      }
-    }
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(mixArray, []);
+  useEffect(() => {
+    setArray(mixArray(array));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <GridParent>
-        {array.map((value) => (
-          <GridItem key={value}>{value}</GridItem>
+        {array.map((value, index) => (
+          <GridItem key={value}>
+            {value}
+            {index === value ? 'True' : ''}
+          </GridItem>
         ))}
       </GridParent>
 
       {Array.from(Array(numberOfColumns).keys()).map((value) => (
         <div key={value}>
           <br />
-          <button onClick={() => slideLeft(value)}>⇦ left {value}</button>
-          <button onClick={() => slideRight(value)}>⇨ right {value}</button>
-          <button onClick={() => slideUp(value)}>⇧ up {value}</button>
-          <button onClick={() => slideDown(value)}>⇩ down {value}</button>
+          <button onClick={() => onClickSlideLeft(value)}>⇦ left {value}</button>
+          <button onClick={() => onClickSlideRight(value)}>⇨ right {value}</button>
+          <button onClick={() => onClickSlideUp(value)}>⇧ up {value}</button>
+          <button onClick={() => onClickSlideDown(value)}>⇩ down {value}</button>
           <br />
         </div>
       ))}
