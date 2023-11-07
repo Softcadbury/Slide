@@ -1,8 +1,9 @@
 import styled from '@emotion/styled';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-const numberOfColumns = 4;
+const numberOfColumns = 8;
 const mixComplexity = 50;
+const useVerticalDirection = false;
 
 const GridParent = styled.div`
   display: grid;
@@ -28,20 +29,6 @@ const switchValues = (array: number[], indexValue1: number, indexValue2: number)
   return newArray;
 };
 
-const slideLeft = (array: number[], row: number) => {
-  let newArray: number[] = [...array];
-  const index = numberOfColumns * row;
-  newArray = moveValue(array, index, index + numberOfColumns - 1);
-  return newArray;
-};
-
-const slideRight = (array: number[], row: number) => {
-  let newArray: number[] = [...array];
-  const index = numberOfColumns * row;
-  newArray = moveValue(array, index + numberOfColumns - 1, index);
-  return newArray;
-};
-
 const slideUp = (array: number[], column: number) => {
   let newArray: number[] = [...array];
 
@@ -62,6 +49,20 @@ const slideDown = (array: number[], column: number) => {
   return newArray;
 };
 
+const slideLeft = (array: number[], row: number) => {
+  let newArray: number[] = [...array];
+  const index = numberOfColumns * row;
+  newArray = moveValue(array, index, index + numberOfColumns - 1);
+  return newArray;
+};
+
+const slideRight = (array: number[], row: number) => {
+  let newArray: number[] = [...array];
+  const index = numberOfColumns * row;
+  newArray = moveValue(array, index + numberOfColumns - 1, index);
+  return newArray;
+};
+
 const getRandomNUmber = (min: number, max: number) => {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -70,45 +71,47 @@ const getRandomNUmber = (min: number, max: number) => {
 
 const mixArray = (array: number[]) => {
   let newArray: number[] = [...array];
+  console.log(newArray);
 
-  for (let i = 0; i < mixComplexity - 1; i++) {
+  for (let i = 0; i < mixComplexity; i++) {
     const randomRowOrColumn = getRandomNUmber(0, numberOfColumns);
-    const direction = getRandomNUmber(0, 4);
+    const direction = getRandomNUmber(0, useVerticalDirection ? 4 : 2);
+
+    console.log(randomRowOrColumn, direction);
 
     switch (direction) {
       case 0:
-        newArray = slideLeft(newArray, randomRowOrColumn);
-        break;
-      case 1:
-        newArray = slideRight(newArray, randomRowOrColumn);
-        break;
-      case 2:
         newArray = slideUp(newArray, randomRowOrColumn);
         break;
-      case 3:
+      case 1:
         newArray = slideDown(newArray, randomRowOrColumn);
         break;
+      case 2:
+        newArray = slideLeft(newArray, randomRowOrColumn);
+        break;
+      case 3:
+        newArray = slideRight(newArray, randomRowOrColumn);
+        break;
     }
+
+    console.log(newArray);
   }
 
   return newArray;
 };
 
+const mixedArray = mixArray(Array.from(Array(numberOfColumns * numberOfColumns).keys()));
+
 function App() {
-  const [array, setArray] = useState<number[]>(Array.from(Array(numberOfColumns * numberOfColumns).keys()));
-
-  const onClickSlideLeft = (row: number) => setArray(slideLeft(array, row));
-
-  const onClickSlideRight = (row: number) => setArray(slideRight(array, row));
+  const [array, setArray] = useState<number[]>(mixedArray);
 
   const onClickSlideUp = (column: number) => setArray(slideUp(array, column));
 
   const onClickSlideDown = (column: number) => setArray(slideDown(array, column));
 
-  useEffect(() => {
-    setArray(mixArray(array));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const onClickSlideLeft = (row: number) => setArray(slideLeft(array, row));
+
+  const onClickSlideRight = (row: number) => setArray(slideRight(array, row));
 
   return (
     <>
@@ -124,10 +127,15 @@ function App() {
       {Array.from(Array(numberOfColumns).keys()).map((value) => (
         <div key={value}>
           <br />
-          <button onClick={() => onClickSlideLeft(value)}>⇦ left {value}</button>
-          <button onClick={() => onClickSlideRight(value)}>⇨ right {value}</button>
           <button onClick={() => onClickSlideUp(value)}>⇧ up {value}</button>
           <button onClick={() => onClickSlideDown(value)}>⇩ down {value}</button>
+
+          {useVerticalDirection && (
+            <>
+              <button onClick={() => onClickSlideLeft(value)}>⇦ left {value}</button>
+              <button onClick={() => onClickSlideRight(value)}>⇨ right {value}</button>
+            </>
+          )}
           <br />
         </div>
       ))}
